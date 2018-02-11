@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<connect>
+		<dbhost>localhost</dbhost>
+		<dbname>someshop</dbname>
+		<dbtype>postgres</dbtype>
+		<port>5432</port>
+	</connect>
+	<user>
+		<login>postgres</login>
+		<password>12345</password>
+	</user>
+	<settings>
+		<updateOffSet>0</updateOffSet>
+    <updateTimeOut>64</updateTimeOut>
+	</settings>
+</configuration>
