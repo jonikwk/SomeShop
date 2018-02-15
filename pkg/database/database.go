@@ -110,21 +110,6 @@ func GetClothes(db *sql.DB, current int, id int) []string {
 	return sections
 }
 
-func GetManClothes(db *sql.DB) []string {
-	rows, err := db.Query(`select title from tables.catalog where id_parent = 4`)
-	if err != nil {
-		glog.Exit(err)
-	}
-
-	sections := make([]string, 0)
-	for rows.Next() {
-		section := ""
-		rows.Scan(&section)
-		sections = append(sections, section)
-	}
-	return sections
-}
-
 func GetCurrentItem(db *sql.DB, chatID int64) int {
 	row := db.QueryRow(`select current_offset from tables.users where id = $1 `, chatID)
 	var current int
@@ -152,7 +137,7 @@ func GetCurrentParnetId(db *sql.DB, chatID int64) int {
 }
 
 func SetCurrentParnetId(db *sql.DB, chatID int64, id int) {
-	stmt, err := db.Prepare(`update tables.users set id_current = $1 where id = $2`)
+	stmt, err := db.Prepare(`update tables.users set id_current = $1, current_offset = 0 where id = $2`)
 	if err != nil {
 		glog.Exit()
 	}
@@ -161,25 +146,6 @@ func SetCurrentParnetId(db *sql.DB, chatID int64, id int) {
 		glog.Exit()
 	}
 }
-
-func SetCurrentItemByDefault(db *sql.DB, chatID int64) {
-	stmt, err := db.Prepare(`update tables.users set current_offset = 0  where id = $1`)
-	if err != nil {
-		glog.Exit()
-	}
-	_, err = stmt.Exec(chatID)
-	if err != nil {
-		glog.Exit()
-	}
-}
-
-//select count(id_parent) from tables.catalog where id_parent = 3;
-/*func GetRecordsCount(db *sql.DB) int { //передаем айди
-	row := db.QueryRow(`select count(id_parent) from tables.catalog where id_parent = 3`)
-	var count int
-	row.Scan(&count)
-	return count
-}*/
 
 func GetRecordsCount(db *sql.DB, id int) int { //передаем айди
 	row := db.QueryRow(`select count(id_parent) from tables.catalog where id_parent = $1`, id)
@@ -192,6 +158,7 @@ func GetCatalogId(db *sql.DB, title string) int { //передаем айди
 	row := db.QueryRow(`select id from tables.catalog where title = $1`, title)
 	var id int
 	row.Scan(&id)
+	color.Red(fmt.Sprintln("ID: ", id))
 	return id
 }
 
@@ -200,4 +167,11 @@ func GetSectionTitle(db *sql.DB, id int) string {
 	var title string
 	row.Scan(&title)
 	return title
+}
+
+func GetParentID(db *sql.DB, id int) int {
+	row := db.QueryRow(`select id_parent from tables.catalog where id = $1 `, id)
+	var parentID int
+	row.Scan(&parentID)
+	return parentID
 }
