@@ -8,3 +8,11 @@ type Users struct {
 	FullName string
 	Address  string
 }
+
+type Description struct {
+	Title       string
+	Price       string
+	Color       string
+	Description string
+	Photo       string
+}

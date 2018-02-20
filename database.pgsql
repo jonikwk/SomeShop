@@ -16,7 +16,7 @@ create table tables.catalog(
 );
 /*
 create table tables.products(
-    id int not null primary key,
+    id serial not null primary key,
     title text not null,
     price money not null,
     color text not null,

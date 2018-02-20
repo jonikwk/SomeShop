@@ -18,8 +18,9 @@ func (tgbot *TelegramBot) DeleteMessage(update tgbotapi.Update) {
 }
 
 func (tgbot *TelegramBot) ChangeMessage(update tgbotapi.Update, db *sql.DB, messageID int, chatID int64, id int) {
-	database.SetCurrentParnetId(db, chatID, id)
-	markup := tgbot.SendSections(update, db, id)
+	// id записи по имени из tables.catalog
+	database.SetCurrentParnetId(db, chatID, id)  // в талице пользователей меняется id_parent
+	markup := tgbot.SendSections(update, db, id) //тправка скций по
 	edit := tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, markup)
 	tgbot.Token.Send(edit)
 }

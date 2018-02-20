@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	c "../configuration"
+	"../models"
 	"github.com/fatih/color"
 	"github.com/golang/glog"
 	_ "github.com/lib/pq"
@@ -174,4 +175,39 @@ func GetParentID(db *sql.DB, id int) int {
 	var parentID int
 	row.Scan(&parentID)
 	return parentID
+}
+
+func GetCatalogIDSameSections(db *sql.DB, chatID int64, section string) int {
+	row := db.QueryRow(`select tables.catalog.id from tables.catalog 
+		inner join tables.users on tables.catalog.id_parent=tables.users.id_current 
+		where title = $1 and tables.users.id = $2`, section, chatID)
+	var id int
+	row.Scan(&id)
+	color.Red(fmt.Sprintln("ID: ", id))
+	return id
+}
+
+func GetItems(db *sql.DB, id int, offset int) []*models.Description {
+	color.Green(fmt.Sprintln("ID IN GET ITEMS: ", id))
+	color.Green(fmt.Sprintln("OFFSET BLYAD: ", offset))
+	rows, err := db.Query(`select title, price, color, description, photo from tables.products
+		 where id_category = $1 limit 5 offset $2`, id, offset)
+	if err != nil {
+		glog.Exit(err)
+	}
+	items := make([]*models.Description, 0)
+	for rows.Next() {
+		item := new(models.Description)
+		rows.Scan(&item.Title, &item.Price, &item.Color, &item.Description, &item.Photo)
+		color.Red(fmt.Sprintln("ITEM: ", item.Title))
+		items = append(items, item)
+	}
+	return items
+}
+
+func GetItemsCount(db *sql.DB, id int) int { //передаем айди
+	row := db.QueryRow(`select count(id) from tables.products where id_category = $1`, id)
+	var count int
+	row.Scan(&count)
+	return count
 }
