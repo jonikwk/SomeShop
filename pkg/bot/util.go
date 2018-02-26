@@ -4,9 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 
+	cnf "../configuration"
 	"../database"
 	"github.com/fatih/color"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/golang/glog"
+	"googlemaps.github.io/maps"
 )
 
 func (tgbot *TelegramBot) DeleteMessage(update tgbotapi.Update) {
@@ -45,4 +48,13 @@ func (tgbot *TelegramBot) DecreaseCurrentItem(db *sql.DB, chatID int64) {
 	current := database.GetCurrentItem(db, chatID)
 	current -= 5
 	database.SetCurrentItem(db, current, chatID)
+}
+
+func GetMapsClient(config *cnf.Configuration) *maps.Client {
+	c, err := maps.NewClient(maps.WithAPIKey("AIzaSyCPSKfYtsbLI1VmrfXYimmpZqDmIfZcEpQ" /*config.Settings.MapsApiKey*/))
+	if err != nil {
+		glog.Exit()
+	}
+	color.Red("HREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE!!!")
+	return c
 }

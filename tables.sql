@@ -8,23 +8,21 @@ create table tables.users(
     address text not null
 );
 
-*/
 create table tables.catalog(
     id int not null primary key, 
     title text not null,
     parent int not null
 );
-/*
+
 create table tables.products(
     id serial not null primary key,
     title text not null,
-    price money not null,
+    price int not null,
     color text not null,
     id_category int not null, 
     description text not null,
     photo text not null
 );
-
 
 create table tables.sizes(
     id int not null primary key,

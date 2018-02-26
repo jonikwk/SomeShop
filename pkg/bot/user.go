@@ -1,15 +1,21 @@
 package bot
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
+	cnf "../configuration"
 	"../database"
 	"github.com/fatih/color"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/golang/glog"
+	//"golang.org/x/net/context"
+	"googlemaps.github.io/maps"
 )
 
-func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB) {
+func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, config *cnf.Configuration) {
 	switch {
 	case update.CallbackQuery != nil:
 		chatID := update.CallbackQuery.Message.Chat.ID
@@ -18,12 +24,12 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB) {
 			color.Red(fmt.Sprintln("CallBACL: ", chatID))
 			database.AddUser(db, chatID)
 		} //ОБНУЛИТЬ ЗНАЧЕНИЯ
-
 		switch update.CallbackQuery.Data {
+
 		case "Одежда":
 			id := database.GetCatalogId(db, "Одежда") //возвращается id записи по имени
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
-		caеуse "Мужская одежда":
+		case "Мужская одежда":
 			id := database.GetCatalogId(db, "Мужская одежда")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
 		case "Женская одежда":
@@ -69,7 +75,11 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB) {
 			id := database.GetCatalogIDSameSections(db, chatID, "Комбинезоны")
 			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
 			tgbot.SendItems(update, db, id)
-
+		case "Куртки":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Куртки")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
 		case "Майки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Майки")
@@ -120,20 +130,66 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB) {
 			tgbot.Token.Send(catalogMsg)
 		case "Главное меню":
 			tgbot.SendMenu(update)
+		case "Отменить регистрацию":
+			tgbot.CanselRegistration(update, db, chatID)
 		case "Регистрация":
-			msg := tgbotapi.NewPhotoShare(chatID, "AgADAgAD66gxG5FEUUhyy2GRiLwx8s8MnA4ABCetSue57gYe7JABAAEC")
-			msg.Caption = "2345678"
-			tgbot.Token.Send(msg)
+			switch {
+			case database.IsUserContainPhoneNumber(db, chatID) == false:
+				tgbot.GetTelephoneNumber(update)
+			case database.IsRegistrationCompleted(db, chatID) == false:
+				tgbot.GetAddress(update, db)
+			} //потом разместить случай на уже зарегистрированного пользователя
+
+		/*if database.IsUserContainPhoneNumber(db, chatID) == false {
+			tgbot.GetTelephoneNumber(update)
+		} else if database.IsGettingAddressCompleted(chatID, db) {
+			tgbot.GetAddress(update, db)
+		}*/
+		case "Да":
+			database.CompleteRegistration(db, chatID)
+			tgbot.SendMenu(update)
 		default:
-			if update.Message.Photo != nil {
-				photo := *update.Message.Photo
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, photo[0].FileID)
-				tgbot.Token.Send(msg)
-				color.Red(photo[0].FileID)
+			condition := database.IsUserContainPhoneNumber(db, chatID) == false && update.Message.Contact != nil
+			switch {
+			case condition == true:
+				switch update.Message.Chat.ID != int64(update.Message.Contact.UserID) {
+				case true:
+					msg := tgbotapi.NewMessage(chatID,
+						"Данный номер не является номером телефона, к которому привязан Ваш аккаунт. Нажмите подтвердить чтобы отправить свой номер телефона.")
+					tgbot.Token.Send(msg)
+				case false:
+					phoneNumber := update.Message.Contact.PhoneNumber
+					database.SetUserPhoneNumber(db, chatID, phoneNumber)
+					tgbot.GetAddress(update, db)
+				}
+			case database.IsRegistrationCompleted(db, chatID) == false && database.IsUserContainPhoneNumber(db, chatID) == true: /*database.IsGettingAddressTrue(db, chatID) == true*/
+				switch strings.Contains(strings.ToLower(update.Message.Text), "калуга") {
+				case true:
+					tgbot.IsAddresCorrect(update, db, config)
+				case false:
+					msg := tgbotapi.NewMessage(chatID, "К сожалению, это не очень похоже на адрес :( \nПовторите ввод снова.")
+					tgbot.Token.Send(msg)
+				}
+			default:
+				if update.Message.Photo != nil {
+					photo := *update.Message.Photo
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, photo[0].FileID)
+					tgbot.Token.Send(msg)
+					color.Red(photo[0].FileID)
+				}
+				//msg := tgbotapi.NewMessage(chatID, "К сожалению, я не в силах понять это :(")
+				//tgbot.Token.Send(msg)
 			}
 		}
 	}
 }
+
+/*if update.Message.Photo != nil {
+photo := *update.Message.Photo
+msg := tgbotapi.NewMessage(update.Message.Chat.ID, photo[0].FileID)
+tgbot.Token.Send(msg)
+color.Red(photo[0].FileID)
+}*/
 
 func (tgbot *TelegramBot) SendItems(update tgbotapi.Update, db *sql.DB, id int) {
 	color.Red("HERE!!!!!!!")
@@ -233,4 +289,83 @@ func (tgbot *TelegramBot) SendMenuButton(update tgbotapi.Update) tgbotapi.ReplyK
 	menu := tgbotapi.NewKeyboardButton("Главное меню")
 	keyboard := tgbotapi.ReplyKeyboardMarkup{Keyboard: [][]tgbotapi.KeyboardButton{{menu}}, ResizeKeyboard: true, OneTimeKeyboard: true}
 	return keyboard
+}
+
+func (tgbot *TelegramBot) GetTelephoneNumber(update tgbotapi.Update) {
+	chatID := update.Message.Chat.ID
+	msg := tgbotapi.NewMessage(chatID, fmt.Sprintln(fmt.Sprintf("Телефон")))
+	acceptButton, declineButton := tgbotapi.NewKeyboardButtonContact("Поделиться"), tgbotapi.NewKeyboardButton("Отменить регистрацию")
+	keyboard := tgbotapi.ReplyKeyboardMarkup{Keyboard: [][]tgbotapi.KeyboardButton{{acceptButton, declineButton}},
+		ResizeKeyboard: true, OneTimeKeyboard: true}
+	msg.ReplyMarkup = keyboard
+	tgbot.Token.Send(msg)
+}
+
+func (tgbot *TelegramBot) GetAddress(update tgbotapi.Update, db *sql.DB) {
+	chatID := update.Message.Chat.ID
+	msg := tgbotapi.NewMessage(chatID, "Адрес. Формат: \n Город, улица номер дома корпус/строение, квартира(если не частный дом) \nНапример: Калуга, Гагарина 13 б, 1\nКалуга, Гурьянова 59 корпус 3, 54")
+	declineButton := tgbotapi.NewKeyboardButton("Отменить регистрацию")
+	keyboard := tgbotapi.ReplyKeyboardMarkup{Keyboard: [][]tgbotapi.KeyboardButton{{declineButton}}, ResizeKeyboard: true, OneTimeKeyboard: true}
+	msg.ReplyMarkup = keyboard
+	tgbot.Token.Send(msg)
+}
+
+func (tgbot *TelegramBot) IsAddresCorrect(update tgbotapi.Update, db *sql.DB, config *cnf.Configuration) bool {
+	client := GetMapsClient(config)
+	var msg tgbotapi.MessageConfig
+	chatID := update.Message.Chat.ID
+	address := update.Message.Text
+	r := &maps.GeocodingRequest{
+		Address: address,
+		Region:  "Россия",
+	}
+	resp, err := client.Geocode(context.Background(), r)
+	if err != nil {
+		glog.Exit()
+	}
+
+	if len(resp) == 0 {
+		msg = tgbotapi.NewMessage(chatID, "К сожалению, данный адрес не найден. Проверьте правильность адреса и повторите ввод.")
+		tgbot.Token.Send(msg)
+		return false
+	}
+
+	status := resp[0].Geometry.LocationType
+	switch status {
+	case "RANGE_INTERPOLATED", "GEOMETRIC_CENTER", "APPROXIMATE":
+		color.Red(resp[0].Geometry.LocationType)
+		msg = tgbotapi.NewMessage(chatID, "К сожалению, я не смог точно определить ваш адрес. Проверьте правильность адреса и повторите ввод.")
+		tgbot.Token.Send(msg)
+		return false
+	}
+	tgbot.SendLocation(update, resp)
+	database.AddAddress(db, chatID, update.Message.Text)
+	tgbot.ConfirmAddress(update, db)
+	return true
+}
+
+func (tgbot *TelegramBot) SendLocation(update tgbotapi.Update, resp []maps.GeocodingResult) {
+	longtitude := resp[0].Geometry.Location.Lng
+	lattitude := resp[0].Geometry.Location.Lat
+	chatID := update.Message.Chat.ID
+	msg := tgbotapi.NewLocation(chatID, lattitude, longtitude)
+	tgbot.Token.Send(msg)
+}
+
+func (tgbot *TelegramBot) ConfirmAddress(update tgbotapi.Update, db *sql.DB) {
+	chatID := update.Message.Chat.ID
+	address := database.GetAddress(db, chatID)
+	msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Я нашел ваш дом. Нажмите Да, чтобы подтвердить адрес или введите новый, если вы указали неверный\n%s", address))
+	acceptButton, declineButton := tgbotapi.NewKeyboardButton("Да"), tgbotapi.NewKeyboardButton("Отменить регистрацию")
+	keyboard := tgbotapi.ReplyKeyboardMarkup{Keyboard: [][]tgbotapi.KeyboardButton{{acceptButton, declineButton}},
+		ResizeKeyboard: true, OneTimeKeyboard: true}
+	msg.ReplyMarkup = keyboard
+	tgbot.Token.Send(msg)
+}
+
+func (tgbot *TelegramBot) CanselRegistration(update tgbotapi.Update, db *sql.DB, chatID int64) {
+	database.SetUserInformationByDefault(db, chatID)
+	msg := tgbotapi.NewMessage(chatID, "Регистрация отменена")
+	tgbot.Token.Send(msg)
+	tgbot.SendMenu(update)
 }

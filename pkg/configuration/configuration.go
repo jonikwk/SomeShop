@@ -30,8 +30,10 @@ type User struct {
 
 type Settings struct {
 	XMLName       xml.Name `xml:"settings"`
+	BotToken      string   `xml:"botToken"`
 	UpdateOfSet   int      `xml:"updateOfSet"`
 	UpdateTimeout int      `xml:"updateTimeOut"`
+	MapsApiKey    string   `xml:"mapsApiKey"`
 }
 
 func (this *Configuration) ParseConfigurationFile() {

@@ -17,7 +17,7 @@ type TelegramBot struct {
 
 //Init -> Начальная инициализация бота необходимыми параметрами
 func (tgbot *TelegramBot) Init(config *cnf.Configuration) {
-	botAPI, err := tgbotapi.NewBotAPI("409034602:AAE7Tbs2-7DF6h5h8RJDn47KFzPc9lGs5ic")
+	botAPI, err := tgbotapi.NewBotAPI(config.Settings.BotToken)
 	if err != nil {
 		glog.Exit(err)
 	}
@@ -35,8 +35,8 @@ func (tgbot *TelegramBot) Init(config *cnf.Configuration) {
 }
 
 //Start -> Запуск цикла поиска обновлений
-func (tgbot *TelegramBot) Start(db *sql.DB) {
+func (tgbot *TelegramBot) Start(db *sql.DB, config *cnf.Configuration) {
 	for update := range tgbot.Updates {
-		tgbot.AnalyzeUpdate(update, db)
+		tgbot.AnalyzeUpdate(update, db, config)
 	}
 }

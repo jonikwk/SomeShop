@@ -211,3 +211,94 @@ func GetItemsCount(db *sql.DB, id int) int { //передаем айди
 	row.Scan(&count)
 	return count
 }
+
+func IsUserContainPhoneNumber(db *sql.DB, chatID int64) bool {
+	row := db.QueryRow(`select phone from tables.users where id = $1`, chatID)
+	var phone string
+	row.Scan(&phone)
+	color.Red("PHONE: ", phone)
+	if phone == "none" || phone == "" {
+		return false
+	}
+	return true
+}
+
+func SetUserPhoneNumber(db *sql.DB, chatID int64, phone string) {
+	stmt, err := db.Prepare(`update tables.users set phone = $1 where id = $2`)
+	if err != nil {
+		glog.Exit()
+	}
+	_, err = stmt.Exec(phone, chatID)
+	if err != nil {
+		glog.Exit()
+	}
+}
+
+func IsRegistrationCompleted(db *sql.DB, chatID int64) bool {
+	row := db.QueryRow(`select registration_completed from tables.users where id = $1`, chatID)
+	var registration bool
+	row.Scan(&registration)
+	color.Red(fmt.Sprintln(registration))
+	return registration
+}
+
+func SetUserInformationByDefault(db *sql.DB, chatID int64) {
+	stmt, err := db.Prepare(`update tables.users set phone = default, address = default where id = $1`)
+	if err != nil {
+		glog.Exit()
+	}
+	_, err = stmt.Exec(chatID)
+	if err != nil {
+		glog.Exit()
+	}
+}
+
+func CompleteRegistration(db *sql.DB, chatID int64) {
+	stmt, err := db.Prepare(`update tables.users set registration_completed = true  where id = $1`)
+	if err != nil {
+		glog.Exit()
+	}
+	_, err = stmt.Exec(chatID)
+	if err != nil {
+		glog.Exit()
+	}
+}
+
+func AddAddress(db *sql.DB, chatID int64, address string) {
+	stmt, err := db.Prepare(`update tables.users set address = $1  where id = $2`)
+	if err != nil {
+		glog.Exit()
+	}
+	_, err = stmt.Exec(address, chatID)
+	if err != nil {
+		glog.Exit()
+	}
+}
+
+func GetAddress(db *sql.DB, chatID int64) string {
+	row := db.QueryRow(`select address from tables.users where id = $1`, chatID)
+	var address string
+	row.Scan(&address)
+	return address
+}
+
+//Пересмотреть
+/*func IsGettingAddressTrue(db *sql.DB, chatID int64) bool {
+	row := db.QueryRow(`select getting_address from tables.users where id = $1`, chatID)
+	var gettingAddress string
+	row.Scan(&gettingAddress)
+	if gettingAddress == "" {
+		return false
+	}
+	return true
+}
+
+//Пересмотреть
+func IsGettingAddressCompleted(chatID int64, db *sql.DB) bool {
+	row := db.QueryRow(`select getting_address from tables.users where id = $1`, chatID)
+	var gettingAddress bool
+	row.Scan(&gettingAddress)
+	color.Green(fmt.Sprintln(gettingAddress))
+	return gettingAddress
+}
+*/

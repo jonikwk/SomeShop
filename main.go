@@ -17,5 +17,5 @@ func main() {
 
 	var bot = new(bot.TelegramBot)
 	bot.Init(config)
-	bot.Start(db)
+	bot.Start(db, config)
 }
