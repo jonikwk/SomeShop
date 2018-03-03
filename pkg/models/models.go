@@ -10,6 +10,7 @@ type Users struct {
 }
 
 type Description struct {
+	ID          int
 	Title       string
 	Price       string
 	Color       string

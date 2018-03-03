@@ -3,6 +3,7 @@ package bot
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
 
 	cnf "../configuration"
 	"../database"
@@ -11,6 +12,16 @@ import (
 	"github.com/golang/glog"
 	"googlemaps.github.io/maps"
 )
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+
+func RandStringBytes() string {
+	b := make([]byte, 10)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
 
 func (tgbot *TelegramBot) DeleteMessage(update tgbotapi.Update) {
 	deleteMessage := tgbotapi.DeleteMessageConfig{

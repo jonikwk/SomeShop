@@ -190,7 +190,7 @@ func GetCatalogIDSameSections(db *sql.DB, chatID int64, section string) int {
 func GetItems(db *sql.DB, id int, offset int) []*models.Description {
 	color.Green(fmt.Sprintln("ID IN GET ITEMS: ", id))
 	color.Green(fmt.Sprintln("OFFSET BLYAD: ", offset))
-	rows, err := db.Query(`select title, price, color, description, photo from tables.products
+	rows, err := db.Query(`select id, title, price, color, description, photo from tables.products
 		 where id_category = $1 limit 5 offset $2`, id, offset)
 	if err != nil {
 		glog.Exit(err)
@@ -198,7 +198,7 @@ func GetItems(db *sql.DB, id int, offset int) []*models.Description {
 	items := make([]*models.Description, 0)
 	for rows.Next() {
 		item := new(models.Description)
-		rows.Scan(&item.Title, &item.Price, &item.Color, &item.Description, &item.Photo)
+		rows.Scan(&item.ID, &item.Title, &item.Price, &item.Color, &item.Description, &item.Photo)
 		color.Red(fmt.Sprintln("ITEM: ", item.Title))
 		items = append(items, item)
 	}
@@ -280,6 +280,67 @@ func GetAddress(db *sql.DB, chatID int64) string {
 	var address string
 	row.Scan(&address)
 	return address
+}
+
+func GetUserOrdersID(db *sql.DB, chatID int64) int {
+	row := db.QueryRow(`select id from tables.orders where id_user = $1 and status = 'in processing'`, chatID)
+	var id int
+	row.Scan(&id)
+	return id
+}
+
+func AddOrder(db *sql.DB, number string, id int64) {
+	stmt, err := db.Prepare(`insert into tables.Orders (number, id_user) values ($1, $2)`)
+	if err != nil {
+		glog.Exit()
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(number, id)
+	if err != nil {
+		glog.Exit()
+	}
+}
+
+func AddItemToOrder(db *sql.DB, product int, order int, size int) {
+	stmt, err := db.Prepare(`insert into tables.order_product (id_product, id_order, id_size) values ($1, $2, $3)`)
+	if err != nil {
+		glog.Exit()
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(product, order, size)
+	if err != nil {
+		glog.Exit()
+	}
+}
+
+func GetProductID(db *sql.DB, photoID string) int {
+	row := db.QueryRow(`select id from tables.products where photo = $1`, photoID)
+	var id int
+	row.Scan(&id)
+	color.Red("ID BLEAT: ", fmt.Sprintln(id))
+	return id
+}
+
+func GetSizes(db *sql.DB, id_product int) []string {
+	rows, err := db.Query(`select tables.sizes.title from tables.product_sizes inner join tables.sizes on tables.product_sizes.id_sizes=tables.sizes.id where id_product = $1`, id_product)
+	if err != nil {
+		glog.Exit(err)
+	}
+
+	titles := make([]string, 0)
+	for rows.Next() {
+		title := ""
+		rows.Scan(&title)
+		titles = append(titles, title)
+	}
+	return titles
+}
+
+func GetSizeID(db *sql.DB, size string) int {
+	row := db.QueryRow(`select id from tables.sizes where title = $1`, size)
+	var id int
+	row.Scan(&id)
+	return id
 }
 
 //Пересмотреть

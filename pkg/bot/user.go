@@ -11,11 +11,15 @@ import (
 	"github.com/fatih/color"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/golang/glog"
-	//"golang.org/x/net/context"
 	"googlemaps.github.io/maps"
 )
 
 func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, config *cnf.Configuration) {
+	//	var myMap = make(map[string]interface{}, 2)
+	//	myMap["zxc"] = 5
+	//	myMap["zg33"] = 49.545
+	//	myMap["zgh"] = "wertpyoto"
+	//	color.Red(fmt.Sprintln(myMap))
 	switch {
 	case update.CallbackQuery != nil:
 		chatID := update.CallbackQuery.Message.Chat.ID
@@ -25,6 +29,34 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			database.AddUser(db, chatID)
 		} //ОБНУЛИТЬ ЗНАЧЕНИЯ
 		switch update.CallbackQuery.Data {
+		case "XS":
+			callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вещь добавлена в корзину")
+			tgbot.Token.AnswerCallbackQuery(callBack)
+			tgbot.AddItemToOrder(update, db, "XS")
+		case "S":
+			callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вещь добавлена в корзину")
+			tgbot.Token.AnswerCallbackQuery(callBack)
+			tgbot.AddItemToOrder(update, db, "S")
+		case "M":
+			callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вещь добавлена в корзину")
+			tgbot.Token.AnswerCallbackQuery(callBack)
+			tgbot.AddItemToOrder(update, db, "M")
+		case "L":
+			callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вещь добавлена в корзину")
+			tgbot.Token.AnswerCallbackQuery(callBack)
+			tgbot.AddItemToOrder(update, db, "L")
+		case "XL":
+			callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вещь добавлена в корзину")
+			tgbot.Token.AnswerCallbackQuery(callBack)
+			tgbot.AddItemToOrder(update, db, "XL")
+		case "XXL":
+			callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вещь добавлена в корзину")
+			tgbot.Token.AnswerCallbackQuery(callBack)
+			tgbot.AddItemToOrder(update, db, "XXL")
+		case "XXXL":
+			callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вещь добавлена в корзину")
+			tgbot.Token.AnswerCallbackQuery(callBack)
+			tgbot.AddItemToOrder(update, db, "XXXL")
 
 		case "Одежда":
 			id := database.GetCatalogId(db, "Одежда") //возвращается id записи по имени
@@ -50,6 +82,32 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 		case "Футболки и майки":
 			id := database.GetCatalogIDSameSections(db, chatID, "Футболки и майки")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
+		case "Блузки и рубашки":
+			id := database.GetCatalogIDSameSections(db, chatID, "Блузки и рубашки")
+			tgbot.ChangeMessage(update, db, messageID, chatID, id)
+		case "Брюки и джинсы":
+			id := database.GetCatalogIDSameSections(db, chatID, "Брюки и джинсы")
+			tgbot.ChangeMessage(update, db, messageID, chatID, id)
+		case "Блузки":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Блузки")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Рубашки":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Рубашки")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Брюки":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Брюки")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Джинсы":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Джинсы")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
 		case "Футболки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Футболки")
@@ -85,6 +143,29 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			id := database.GetCatalogIDSameSections(db, chatID, "Майки")
 			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
 			tgbot.SendItems(update, db, id)
+		case "Пальто":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Пальто")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Шубы":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Шубы")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Дубленки":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Дубленки")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Плащи":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Плащи")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "some":
+			some1 := update.CallbackQuery.Message.Caption
+			color.Green(some1)
 		case "Каталог вперед":
 			tgbot.DeleteMessage(update)
 			tgbot.IncreaseCurrentItem(db, chatID)
@@ -198,15 +279,32 @@ func (tgbot *TelegramBot) SendItems(update tgbotapi.Update, db *sql.DB, id int) 
 	color.Yellow(fmt.Sprintln("OFFSET: ", offset))
 	items := database.GetItems(db, id, offset)
 	color.Green(fmt.Sprintln("ITEMS: ", items))
+	sizesKeyboard := []tgbotapi.InlineKeyboardButton{}
+	var photoMsg tgbotapi.PhotoConfig
 	for _, item := range items {
 		keyboard := tgbotapi.InlineKeyboardMarkup{}
-		bucket := tgbotapi.NewInlineKeyboardButtonData("В корзину", "В корзину")
-		keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, []tgbotapi.InlineKeyboardButton{bucket})
-		msg := tgbotapi.NewPhotoShare(chatID, item.Photo)
-		msg.Caption = fmt.Sprintf("%s\nЦена: %s\nЦвет: %s\n%s", item.Title, item.Price, item.Color, item.Description)
-		msg.ReplyMarkup = keyboard
-		tgbot.Token.Send(msg)
+		sizes := database.GetSizes(db, item.ID)
+		photoMsg = tgbotapi.NewPhotoShare(chatID, item.Photo)
+		photoMsg.Caption = fmt.Sprintf("%s\nЦена: %s\nЦвет: %s\n%s", item.Title, item.Price, item.Color, item.Description)
+		if len(sizes) != 0 {
+			for _, size := range sizes {
+				button := tgbotapi.NewInlineKeyboardButtonData(size, size)
+				sizesKeyboard = append(sizesKeyboard, button)
+			}
+			keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, sizesKeyboard)
+
+			sizesKeyboard = []tgbotapi.InlineKeyboardButton{}
+			photoMsg.ReplyMarkup = keyboard
+			tgbot.Token.Send(photoMsg)
+		} else {
+			tgbot.Token.Send(photoMsg)
+			msg := tgbotapi.NewMessage(chatID, "Данного товара нет в наличии")
+			tgbot.Token.Send(msg)
+		}
+		//keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, []tgbotapi.InlineKeyboardButton{f, s, t})
+
 	}
+
 	msg := tgbotapi.NewMessage(chatID, "Выберите действие:")
 	keyboard := tgbotapi.InlineKeyboardMarkup{}
 	count := database.GetItemsCount(db, id)
@@ -368,4 +466,21 @@ func (tgbot *TelegramBot) CanselRegistration(update tgbotapi.Update, db *sql.DB,
 	msg := tgbotapi.NewMessage(chatID, "Регистрация отменена")
 	tgbot.Token.Send(msg)
 	tgbot.SendMenu(update)
+}
+
+func (tgbot *TelegramBot) AddItemToOrder(update tgbotapi.Update, db *sql.DB, size string) {
+	photo := *update.CallbackQuery.Message.Photo
+	photoID := photo[0].FileID
+	productID := database.GetProductID(db, photoID)
+	chatID := update.CallbackQuery.Message.Chat.ID
+	id := database.GetUserOrdersID(db, chatID)
+	//color.Green(fmt.Sprintln("ВОТ ТУТА АЙДИ :", id))
+	if id == 0 {
+		number := RandStringBytes()
+		//color.Red("Some number: ", number)
+		database.AddOrder(db, number, chatID)
+		id = database.GetUserOrdersID(db, chatID)
+	}
+	id_size := database.GetSizeID(db, size)
+	database.AddItemToOrder(db, productID, id, id_size)
 }

@@ -1,5 +1,7 @@
 
 /*Женская одежда*/
+
+
 /*юбки*/
 INSERT INTO tables.products (title, price, color, id_category, description, photo) VALUES 
 ('Юбка в складку', 1799,'Белый с цветочным принтом', 15, 'Выполнена из легкого хлопкового полотна, линия талии на среднем уровне, боковые карманы, длина миди, состав:98% хлопок, 2% эластан', 'AgADAgADKqkxG5FEUUiKa_FTXrOSIr_qAw4ABLBAVhiH1Wo7VWwDAAEC'),
