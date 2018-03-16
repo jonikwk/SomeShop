@@ -17,3 +17,12 @@ type Description struct {
 	Description string
 	Photo       string
 }
+
+type Order struct {
+	Title    string
+	Price    int
+	Size     string
+	Color    string
+	Photo    string
+	Quantity int
+}

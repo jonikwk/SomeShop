@@ -336,11 +336,69 @@ func GetSizes(db *sql.DB, id_product int) []string {
 	return titles
 }
 
+/*select title, price, color, photo, quantity from tables.products inner join tables.order_product on tables.products.id=tables.order_product.id_product inner join tables.orders on tables.order_product.id_order=tables.orders.id where tables.orders.id_user = 294176487;
+ */
+
 func GetSizeID(db *sql.DB, size string) int {
 	row := db.QueryRow(`select id from tables.sizes where title = $1`, size)
 	var id int
 	row.Scan(&id)
 	return id
+}
+
+func GetOrders(db *sql.DB, chatID int64) *models.Order {
+	rows := db.QueryRow(`select tables.products.title, price, tables.sizes.title, color, photo, quantity from tables.products
+		 inner join tables.order_product on tables.products.id=tables.order_product.id_product 
+		 inner join tables.sizes on tables.order_product.id_size=tables.sizes.id
+		 inner join tables.orders on tables.order_product.id_order=tables.orders.id 
+		 where tables.orders.id_user = $1 order by tables.order_product.id limit 1 offset 0`, chatID)
+
+	item := new(models.Order)
+	rows.Scan(&item.Title, &item.Price, &item.Size, &item.Color, &item.Photo, &item.Quantity)
+	color.Red(fmt.Sprintln("ITEM: ", item.Title))
+	return item
+}
+
+func DeleteItemFromOrder(db *sql.DB, product int, order int, size int) {
+	stmt, err := db.Prepare(`delete from tables.order_product where id_product = $1 and id_order = $2 and id_size = $3`)
+	if err != nil {
+		glog.Exit()
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(product, order, size)
+	if err != nil {
+		glog.Exit()
+	}
+}
+
+func GetUserOrdersCount(db *sql.DB, orderID int) int {
+	row := db.QueryRow(`select count(*) from tables.order_product where id_order = $1`, orderID)
+	var count int
+	row.Scan(&count)
+	return count
+}
+
+func ChangeQuantityItemToOrder(db *sql.DB, product int, order int, size int, typeChange int) {
+	/*if typeChange == "+" {
+		var stmt, err = db.Prepare(`update tables.order_product set quantity = ((select quantity from tables.order_product
+		where id_product=$1 and id_order=$2 and id_size=$3)+1)
+		where id_product=$1 and id_order=$2 and id_size=$3`)
+	} else {
+		stmt, err := db.Prepare(`update tables.order_product set quantity = ((select quantity from tables.order_product
+			where id_product=$1 and id_order=$2 and id_size=$3)-1)
+			where id_product=$1 and id_order=$2 and id_size=$3`)
+	}*/
+	stmt, err := db.Prepare(`update tables.order_product set quantity = ((select quantity from tables.order_product 
+		where id_product=$1 and id_order=$2 and id_size=$3) + $4) 
+		where id_product=$1 and id_order=$2 and id_size=$3`)
+	if err != nil {
+		glog.Exit()
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(product, order, size, typeChange)
+	if err != nil {
+		glog.Exit()
+	}
 }
 
 //Пересмотреть

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 
 	cnf "../configuration"
@@ -14,12 +15,9 @@ import (
 	"googlemaps.github.io/maps"
 )
 
+var sizes = make(map[int64]string)
+
 func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, config *cnf.Configuration) {
-	//	var myMap = make(map[string]interface{}, 2)
-	//	myMap["zxc"] = 5
-	//	myMap["zg33"] = 49.545
-	//	myMap["zgh"] = "wertpyoto"
-	//	color.Red(fmt.Sprintln(myMap))
 	switch {
 	case update.CallbackQuery != nil:
 		chatID := update.CallbackQuery.Message.Chat.ID
@@ -182,6 +180,36 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			color.Green(fmt.Sprintln("ID PARENT: ", id))
 			database.SetCurrentParnetId(db, chatID, id)
 			tgbot.ChangeCurrentSection(update, db, chatID)
+		case "Увеличить":
+			tgbot.IncreaseItem(update, db, chatID)
+			tgbot.DeleteMessage(update)
+			msg, keyboard := tgbot.GetOrders(update, db, chatID)
+			msg.ReplyMarkup = keyboard
+			tgbot.Token.Send(msg)
+			//msg.ReplyMarkup = keyboard
+			//tgbot.Token.Send(msg)
+			//edit := tgbotapi.NewEditMessageReplyMarkup(chatID, update.CallbackQuery.Message.MessageID, keyboard)
+			//color.Red(fmt.Sprintln(edit))
+			//msg.ReplyMarkup = edit.ReplyMarkup
+
+		case "Уменьшить":
+			tgbot.DecreaseItem(update, db, chatID)
+			tgbot.DeleteMessage(update)
+			msg, keyboard := tgbot.GetOrders(update, db, chatID)
+			msg.ReplyMarkup = keyboard
+			tgbot.Token.Send(msg)
+		case "Удалить":
+			tgbot.DeleteItem(update, db, chatID)
+			tgbot.DeleteMessage(update)
+			orderID := database.GetUserOrdersID(db, chatID)
+			if database.GetUserOrdersCount(db, orderID) == 0 {
+				msg := tgbotapi.NewMessage(chatID, "Ваша корзина пуста. Перейдите в каталог для выбора товаров")
+				tgbot.Token.Send(msg)
+			} else {
+				msg, keyboard := tgbot.GetOrders(update, db, chatID)
+				msg.ReplyMarkup = keyboard
+				tgbot.Token.Send(msg)
+			}
 		case "Ещё":
 			tgbot.DeleteMessage(update)
 			idCurrent := database.GetCurrentParnetId(db, chatID)
@@ -201,6 +229,16 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 		case "/start":
 			tgbot.Greeting(update)
 			tgbot.SendMenu(update)
+		case "Корзина":
+			orderID := database.GetUserOrdersID(db, chatID)
+			if database.GetUserOrdersCount(db, orderID) == 0 {
+				msg := tgbotapi.NewMessage(chatID, "Ваша корзина пуста. Перейдите в каталог для выбора товаров")
+				tgbot.Token.Send(msg)
+			} else {
+				msg, keyboard := tgbot.GetOrders(update, db, chatID)
+				msg.ReplyMarkup = keyboard
+				tgbot.Token.Send(msg)
+			}
 		case "Каталог":
 			menuMsg := tgbotapi.NewMessage(chatID, "<i>Каталог:</i>")
 			menuMsg.ParseMode = "HTML"
@@ -378,7 +416,7 @@ func (tgbot *TelegramBot) SendMenu(update tgbotapi.Update) {
 	bucket := tgbotapi.NewKeyboardButton("Корзина")
 	registration := tgbotapi.NewKeyboardButton("Регистрация")
 	news := tgbotapi.NewKeyboardButton("Новости")
-	keyboard := tgbotapi.ReplyKeyboardMarkup{Keyboard: [][]tgbotapi.KeyboardButton{{catalog, bucket}, {registration, news}}, ResizeKeyboard: true, OneTimeKeyboard: true}
+	keyboard := tgbotapi.ReplyKeyboardMarkup{Keyboard: [][]tgbotapi.KeyboardButton{{catalog, bucket}, {registration, news}}, ResizeKeyboard: true, OneTimeKeyboard: false}
 	msg.ReplyMarkup = keyboard
 	tgbot.Token.Send(msg)
 }
@@ -483,4 +521,75 @@ func (tgbot *TelegramBot) AddItemToOrder(update tgbotapi.Update, db *sql.DB, siz
 	}
 	id_size := database.GetSizeID(db, size)
 	database.AddItemToOrder(db, productID, id, id_size)
+}
+
+func (tgbot *TelegramBot) GetOrders(update tgbotapi.Update, db *sql.DB, chatID int64) (tgbotapi.PhotoConfig, tgbotapi.InlineKeyboardMarkup) {
+	item := database.GetOrders(db, chatID)
+	color.Red("REWTREW: ", item.Photo)
+	var msg = tgbotapi.NewPhotoShare(chatID, item.Photo)
+	keyboard := tgbotapi.InlineKeyboardMarkup{}
+	delete := tgbotapi.NewInlineKeyboardButtonData("X", "Удалить")
+	decrease := tgbotapi.NewInlineKeyboardButtonData("-", "Уменьшить")
+	quantity := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%d шт", item.Quantity), "default")
+	increase := tgbotapi.NewInlineKeyboardButtonData("+", "Увеличить")
+	back := tgbotapi.NewInlineKeyboardButtonData("<-", "Назад куда то")
+	current := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%d/%d", 1, 1), "текущее количество")
+	toward := tgbotapi.NewInlineKeyboardButtonData("->", "Вперед куда то")
+	/*size := tgbotapi.NewInlineKeyboardButtonData(item.Size, "default")*/
+	msg.Caption = fmt.Sprintf(" %s\nСтоимость: %d * %d = %d рублей\nЦвет: %s\nРазмер: %s",
+		item.Title, item.Price, item.Quantity, item.Price*item.Quantity, item.Color, item.Size)
+	sizes[chatID] = item.Size
+	keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, []tgbotapi.InlineKeyboardButton{delete, decrease, quantity, increase})
+	keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, []tgbotapi.InlineKeyboardButton{back, current, toward})
+	/*keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, []tgbotapi.InlineKeyboardButton{size})*/
+	return msg, keyboard
+
+}
+
+func (tgbot *TelegramBot) IncreaseItem(update tgbotapi.Update, db *sql.DB, chatID int64) {
+	caption := update.CallbackQuery.Message.Caption
+	r, _ := regexp.Compile(`([0-9]{2}|[A-Z]{1,4})$`)
+	size := r.FindString(caption)
+	photo := *update.CallbackQuery.Message.Photo
+	photoID := photo[0].FileID
+	color.Red("FILE ID: ", photoID)
+	productID := database.GetProductID(db, photoID)
+	orderID := database.GetUserOrdersID(db, chatID)
+	sizeID := database.GetSizeID(db, size)
+	database.AddItemToOrder(db, productID, orderID, sizeID)
+	//database.ChangeQuantityItemToOrder(db, productID, orderID, sizeID, 1)
+	color.Red(fmt.Sprintf("productID: %d, orderID: %d, size: %s", productID, orderID, sizeID))
+	/*tgbot.DeleteMessage(update)*/
+	callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Количество товара увеличено")
+	tgbot.Token.AnswerCallbackQuery(callBack)
+	//tgbot.GetOrders(update, db, chatID)
+}
+
+func (tgbot *TelegramBot) DeleteItem(update tgbotapi.Update, db *sql.DB, chatID int64) {
+	caption := update.CallbackQuery.Message.Caption
+	r, _ := regexp.Compile(`([0-9]{2}|[A-Z]{1,4})$`)
+	size := r.FindString(caption)
+	photo := *update.CallbackQuery.Message.Photo
+	photoID := photo[0].FileID
+	productID := database.GetProductID(db, photoID)
+	orderID := database.GetUserOrdersID(db, chatID)
+	sizeID := database.GetSizeID(db, size)
+	database.DeleteItemFromOrder(db, productID, orderID, sizeID)
+	callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Товар удален")
+	tgbot.Token.AnswerCallbackQuery(callBack)
+}
+
+func (tgbot *TelegramBot) DecreaseItem(update tgbotapi.Update, db *sql.DB, chatID int64) {
+	caption := update.CallbackQuery.Message.Caption
+	r, _ := regexp.Compile(`([0-9]{2}|[A-Z]{1,4})$`)
+	size := r.FindString(caption)
+	photo := *update.CallbackQuery.Message.Photo
+	photoID := photo[0].FileID
+	productID := database.GetProductID(db, photoID)
+	orderID := database.GetUserOrdersID(db, chatID)
+	sizeID := database.GetSizeID(db, size)
+	database.ChangeQuantityItemToOrder(db, productID, orderID, sizeID, -1)
+	//color.Red(fmt.Sprintf("productID: %d, orderID: %d, size: %s", productID, orderID, sizeID))
+	callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Количество товара уменьшено")
+	tgbot.Token.AnswerCallbackQuery(callBack)
 }
