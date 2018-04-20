@@ -182,22 +182,14 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			tgbot.ChangeCurrentSection(update, db, chatID)
 		case "Увеличить":
 			tgbot.IncreaseItem(update, db, chatID)
-			tgbot.DeleteMessage(update)
-			msg, keyboard := tgbot.GetOrders(update, db, chatID)
-			msg.ReplyMarkup = keyboard
-			tgbot.Token.Send(msg)
-			//msg.ReplyMarkup = keyboard
-			//tgbot.Token.Send(msg)
-			//edit := tgbotapi.NewEditMessageReplyMarkup(chatID, update.CallbackQuery.Message.MessageID, keyboard)
-			//color.Red(fmt.Sprintln(edit))
-			//msg.ReplyMarkup = edit.ReplyMarkup
-
+			_, keyboard := tgbot.GetOrders(update, db, chatID)
+			edit := tgbotapi.NewEditMessageReplyMarkup(chatID, update.CallbackQuery.Message.MessageID, keyboard)
+			tgbot.Token.Send(edit)
 		case "Уменьшить":
 			tgbot.DecreaseItem(update, db, chatID)
-			tgbot.DeleteMessage(update)
-			msg, keyboard := tgbot.GetOrders(update, db, chatID)
-			msg.ReplyMarkup = keyboard
-			tgbot.Token.Send(msg)
+			_, keyboard := tgbot.GetOrders(update, db, chatID)
+			edit := tgbotapi.NewEditMessageReplyMarkup(chatID, update.CallbackQuery.Message.MessageID, keyboard)
+			tgbot.Token.Send(edit)
 		case "Удалить":
 			tgbot.DeleteItem(update, db, chatID)
 			tgbot.DeleteMessage(update)
