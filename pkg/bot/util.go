@@ -42,10 +42,8 @@ func (tgbot *TelegramBot) ChangeMessage(update tgbotapi.Update, db *sql.DB, mess
 func (tgbot *TelegramBot) ChangeCurrentSection(update tgbotapi.Update, db *sql.DB, chatID int64) {
 	idCurrent := database.GetCurrentParnetId(db, chatID)
 	color.Yellow(fmt.Sprintln("ID CURRENT ЧТО ТОЛЬКО ЧТО СТАВИЛ: ", idCurrent))
-	title := database.GetSectionTitle(db, idCurrent)
 	msg := tgbotapi.NewMessage(chatID, "Выберите раздел:")
-	id := database.GetCatalogId(db, title)
-	msg.ReplyMarkup = tgbot.SendSections(update, db, id)
+	msg.ReplyMarkup = tgbot.SendSections(update, db, idCurrent)
 	tgbot.Token.Send(msg)
 }
 
