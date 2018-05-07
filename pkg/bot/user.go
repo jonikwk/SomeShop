@@ -83,8 +83,14 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 		case "Блузки и рубашки":
 			id := database.GetCatalogIDSameSections(db, chatID, "Блузки и рубашки")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
+		case "Пиджаки и жакеты":
+			id := database.GetCatalogIDSameSections(db, chatID, "Пиджаки и жакеты")
+			tgbot.ChangeMessage(update, db, messageID, chatID, id)
 		case "Брюки и джинсы":
 			id := database.GetCatalogIDSameSections(db, chatID, "Брюки и джинсы")
+			tgbot.ChangeMessage(update, db, messageID, chatID, id)
+		case "Джемперы и свитеры":
+			id := database.GetCatalogIDSameSections(db, chatID, "Джемперы и свитеры")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
 		case "Блузки":
 			tgbot.DeleteMessage(update)
@@ -156,9 +162,44 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			id := database.GetCatalogIDSameSections(db, chatID, "Дубленки")
 			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
 			tgbot.SendItems(update, db, id)
+		case "Бомберы":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Бомберы")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Парки":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Парки")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
 		case "Плащи":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Плащи")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Джемперы":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Джемперы")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Свитеры":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Свитеры")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Пиджаки":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Пиджаки")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Жакеты":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Жакеты")
+			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
+			tgbot.SendItems(update, db, id)
+		case "Толстовки":
+			tgbot.DeleteMessage(update)
+			id := database.GetCatalogIDSameSections(db, chatID, "Толстовки")
 			database.SetCurrentParnetId(db, chatID, id) // в талице пользователей меняется id_parent
 			tgbot.SendItems(update, db, id)
 		case "some":
