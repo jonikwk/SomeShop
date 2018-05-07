@@ -80,6 +80,9 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 		case "Футболки и майки":
 			id := database.GetCatalogIDSameSections(db, chatID, "Футболки и майки")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
+		case "Джемперы и толстовки":
+			id := database.GetCatalogIDSameSections(db, chatID, "Джемперы и толстовки")
+			tgbot.ChangeMessage(update, db, messageID, chatID, id)
 		case "Блузки и рубашки":
 			id := database.GetCatalogIDSameSections(db, chatID, "Блузки и рубашки")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
