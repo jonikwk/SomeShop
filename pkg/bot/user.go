@@ -55,7 +55,13 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Вещь добавлена в корзину")
 			tgbot.Token.AnswerCallbackQuery(callBack)
 			tgbot.AddItemToOrder(update, db, "XXXL")
-
+		case "Отзывы":
+		//	text := update.CallbackQuery.Message.Caption
+		//msg := tgbotapi.NewMessage(chatID, text)
+		//tgbot.Token.Send(msg)
+		case "Добавить отзыв":
+			database.ActivateAddingReview(db, chatID)
+			tgbot.AddReview(update, db, chatID)
 		case "Одежда":
 			id := database.GetCatalogId(db, "Одежда") //возвращается id записи по имени
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
@@ -347,12 +353,21 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 					tgbot.Token.Send(msg)
 				}
 			default:
-				if update.Message.Photo != nil {
+				if database.GetAddingReview(db, chatID) {
+					text := update.Message.Text
+					tgbot.AddTextReview(db, chatID, text)
+					database.DeactivateAddingReview(db, chatID)
+					msg := tgbotapi.NewMessage(chatID, "review added")
+					tgbot.Token.Send(msg)
+				}
+				/*if update.Message.Photo != nil {
 					photo := *update.Message.Photo
 					msg := tgbotapi.NewMessage(update.Message.Chat.ID, photo[0].FileID)
 					tgbot.Token.Send(msg)
 					color.Red(photo[0].FileID)
-				}
+				}*/
+
+				color.Red(fmt.Sprintln("YOUR REVIEW: ", update.Message.Text))
 				//msg := tgbotapi.NewMessage(chatID, "К сожалению, я не в силах понять это :(")
 				//tgbot.Token.Send(msg)
 			}
@@ -389,6 +404,10 @@ func (tgbot *TelegramBot) SendItems(update tgbotapi.Update, db *sql.DB, id int) 
 			keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, sizesKeyboard)
 
 			sizesKeyboard = []tgbotapi.InlineKeyboardButton{}
+			review := tgbotapi.NewInlineKeyboardButtonData("Отзывы", "Отзывы")
+			newReview := tgbotapi.NewInlineKeyboardButtonData("Добавить отзыв", "Добавить отзыв")
+			keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, []tgbotapi.InlineKeyboardButton{review})
+			keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, []tgbotapi.InlineKeyboardButton{newReview})
 			photoMsg.ReplyMarkup = keyboard
 			tgbot.Token.Send(photoMsg)
 		} else {
@@ -480,7 +499,7 @@ func (tgbot *TelegramBot) SendMenu(update tgbotapi.Update) {
 
 func (tgbot *TelegramBot) SendMenuButton(update tgbotapi.Update) tgbotapi.ReplyKeyboardMarkup {
 	menu := tgbotapi.NewKeyboardButton("Главное меню")
-	keyboard := tgbotapi.ReplyKeyboardMarkup{Keyboard: [][]tgbotapi.KeyboardButton{{menu}}, ResizeKeyboard: true, OneTimeKeyboard: true}
+	keyboard := tgbotapi.ReplyKeyboardMarkup{Keyboard: [][]tgbotapi.KeyboardButton{{menu}}, ResizeKeyboard: true, OneTimeKeyboard: false}
 	return keyboard
 }
 
@@ -652,4 +671,17 @@ func (tgbot *TelegramBot) DecreaseItem(update tgbotapi.Update, db *sql.DB, chatI
 	//color.Red(fmt.Sprintf("productID: %d, orderID: %d, size: %s", productID, orderID, sizeID))
 	callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Количество товара уменьшено")
 	tgbot.Token.AnswerCallbackQuery(callBack)
+}
+
+func (tgbot *TelegramBot) AddReview(update tgbotapi.Update, db *sql.DB, chatID int64) {
+	photo := *update.CallbackQuery.Message.Photo
+	photoID := photo[0].FileID
+	productID := database.GetProductID(db, photoID)
+	database.AddAuthorReview(db, chatID, productID)
+	msg := tgbotapi.NewMessage(chatID, "Your review:")
+	tgbot.Token.Send(msg)
+}
+
+func (tgbot *TelegramBot) AddTextReview(db *sql.DB, chatID int64, text string) {
+	database.AddTextReview(db, chatID, text)
 }

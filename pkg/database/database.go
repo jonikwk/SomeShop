@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	c "../configuration"
 	"../models"
@@ -406,6 +407,58 @@ func GetItemsInBucket(db *sql.DB, chatID int64) int {
 	var count int
 	row.Scan(&count)
 	return count
+}
+
+func AddAuthorReview(db *sql.DB, chatID int64, productID int) {
+	stmt, err := db.Prepare(`insert into tables.reviews (id_product, id_user) values ($1, $2)`)
+	if err != nil {
+		glog.Exit()
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(productID, chatID)
+	if err != nil {
+		glog.Exit()
+	}
+}
+
+func ActivateAddingReview(db *sql.DB, chatID int64) {
+	stmt, err := db.Prepare(`update tables.users set adding_review = $1 where id = $2`)
+	if err != nil {
+		glog.Exit()
+	}
+	_, err = stmt.Exec(true, chatID)
+	if err != nil {
+		glog.Exit()
+	}
+}
+
+func DeactivateAddingReview(db *sql.DB, chatID int64) {
+	stmt, err := db.Prepare(`update tables.users set adding_review = $1 where id = $2`)
+	if err != nil {
+		glog.Exit()
+	}
+	_, err = stmt.Exec(false, chatID)
+	if err != nil {
+		glog.Exit()
+	}
+}
+
+func GetAddingReview(db *sql.DB, chatID int64) bool {
+	row := db.QueryRow(`select adding_review from tables.users where id = $1`, chatID)
+	var adding bool
+	row.Scan(&adding)
+	return adding
+}
+
+func AddTextReview(db *sql.DB, chatID int64, text string) {
+	stmt, err := db.Prepare(`update tables.reviews set description = $1, date = $2 where id_user = $3 and description = 'review_description'`)
+	if err != nil {
+		glog.Exit()
+	}
+	_, err = stmt.Exec(text, time.Now().Format("02.01.06 15:04:05"), chatID)
+	if err != nil {
+		glog.Exit()
+	}
 }
 
 //select count(id_order) from tables.order_product inner join tables.orders on id_order = tables.orders.id where tables.orders.id_user = 364794408;
