@@ -346,12 +346,12 @@ func GetSizeID(db *sql.DB, size string) int {
 	return id
 }
 
-func GetOrders(db *sql.DB, chatID int64) *models.Order {
+func GetOrders(db *sql.DB, chatID int64, offset int) *models.Order {
 	rows := db.QueryRow(`select tables.products.title, price, tables.sizes.title, color, photo, quantity from tables.products
 		 inner join tables.order_product on tables.products.id=tables.order_product.id_product 
 		 inner join tables.sizes on tables.order_product.id_size=tables.sizes.id
 		 inner join tables.orders on tables.order_product.id_order=tables.orders.id 
-		 where tables.orders.id_user = $1 order by tables.order_product.id limit 1 offset 0`, chatID)
+		 where tables.orders.id_user = $1 order by tables.order_product.id limit 1 offset $2`, chatID, offset)
 
 	item := new(models.Order)
 	rows.Scan(&item.Title, &item.Price, &item.Size, &item.Color, &item.Photo, &item.Quantity)
@@ -400,6 +400,15 @@ func ChangeQuantityItemToOrder(db *sql.DB, product int, order int, size int, typ
 		glog.Exit()
 	}
 }
+
+func GetItemsInBucket(db *sql.DB, chatID int64) int {
+	row := db.QueryRow(`select count(id_order) from tables.order_product inner join tables.orders on id_order = tables.orders.id where tables.orders.id_user = $1`, chatID)
+	var count int
+	row.Scan(&count)
+	return count
+}
+
+//select count(id_order) from tables.order_product inner join tables.orders on id_order = tables.orders.id where tables.orders.id_user = 364794408;
 
 //Пересмотреть
 /*func IsGettingAddressTrue(db *sql.DB, chatID int64) bool {

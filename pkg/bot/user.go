@@ -224,16 +224,36 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			color.Green(fmt.Sprintln("ID PARENT: ", id))
 			database.SetCurrentParnetId(db, chatID, id)
 			tgbot.ChangeCurrentSection(update, db, chatID)
+		case "Назад куда то":
+			tgbot.DeleteMessage(update)
+			offset := database.GetCurrentItem(db, chatID)
+			if offset > 0 {
+				offset--
+			}
+			msg := tgbot.GetOrders(update, db, chatID, offset)
+			database.SetCurrentItem(db, offset, chatID)
+			tgbot.Token.Send(msg)
+		case "Вперед куда то":
+			tgbot.DeleteMessage(update)
+			offset := database.GetCurrentItem(db, chatID)
+			if offset < database.GetItemsInBucket(db, chatID)-1 {
+				offset++
+			}
+			msg := tgbot.GetOrders(update, db, chatID, offset)
+			database.SetCurrentItem(db, offset, chatID)
+			tgbot.Token.Send(msg)
 		case "Увеличить":
 			tgbot.IncreaseItem(update, db, chatID)
-			_, keyboard := tgbot.GetOrders(update, db, chatID)
-			edit := tgbotapi.NewEditMessageReplyMarkup(chatID, update.CallbackQuery.Message.MessageID, keyboard)
-			tgbot.Token.Send(edit)
+			tgbot.DeleteMessage(update)
+			offset := database.GetCurrentItem(db, chatID)
+			msg := tgbot.GetOrders(update, db, chatID, offset)
+			tgbot.Token.Send(msg)
 		case "Уменьшить":
 			tgbot.DecreaseItem(update, db, chatID)
-			_, keyboard := tgbot.GetOrders(update, db, chatID)
-			edit := tgbotapi.NewEditMessageReplyMarkup(chatID, update.CallbackQuery.Message.MessageID, keyboard)
-			tgbot.Token.Send(edit)
+			tgbot.DeleteMessage(update)
+			offset := database.GetCurrentItem(db, chatID)
+			msg := tgbot.GetOrders(update, db, chatID, offset)
+			tgbot.Token.Send(msg)
 		case "Удалить":
 			tgbot.DeleteItem(update, db, chatID)
 			tgbot.DeleteMessage(update)
@@ -242,8 +262,8 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 				msg := tgbotapi.NewMessage(chatID, "Ваша корзина пуста. Перейдите в каталог для выбора товаров")
 				tgbot.Token.Send(msg)
 			} else {
-				msg, keyboard := tgbot.GetOrders(update, db, chatID)
-				msg.ReplyMarkup = keyboard
+				offset := database.GetCurrentItem(db, chatID)
+				msg := tgbot.GetOrders(update, db, chatID, offset)
 				tgbot.Token.Send(msg)
 			}
 		case "Ещё":
@@ -271,8 +291,9 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 				msg := tgbotapi.NewMessage(chatID, "Ваша корзина пуста. Перейдите в каталог для выбора товаров")
 				tgbot.Token.Send(msg)
 			} else {
-				msg, keyboard := tgbot.GetOrders(update, db, chatID)
-				msg.ReplyMarkup = keyboard
+				database.SetCurrentItem(db, 0, chatID)
+				offset := database.GetCurrentItem(db, chatID)
+				msg := tgbot.GetOrders(update, db, chatID, offset)
 				tgbot.Token.Send(msg)
 			}
 		case "Каталог":
@@ -559,8 +580,8 @@ func (tgbot *TelegramBot) AddItemToOrder(update tgbotapi.Update, db *sql.DB, siz
 	database.AddItemToOrder(db, productID, id, id_size)
 }
 
-func (tgbot *TelegramBot) GetOrders(update tgbotapi.Update, db *sql.DB, chatID int64) (tgbotapi.PhotoConfig, tgbotapi.InlineKeyboardMarkup) {
-	item := database.GetOrders(db, chatID)
+func (tgbot *TelegramBot) GetOrders(update tgbotapi.Update, db *sql.DB, chatID int64, offset int) tgbotapi.PhotoConfig {
+	item := database.GetOrders(db, chatID, offset)
 	color.Red("REWTREW: ", item.Photo)
 	var msg = tgbotapi.NewPhotoShare(chatID, item.Photo)
 	keyboard := tgbotapi.InlineKeyboardMarkup{}
@@ -569,16 +590,19 @@ func (tgbot *TelegramBot) GetOrders(update tgbotapi.Update, db *sql.DB, chatID i
 	quantity := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%d шт", item.Quantity), "default")
 	increase := tgbotapi.NewInlineKeyboardButtonData("+", "Увеличить")
 	back := tgbotapi.NewInlineKeyboardButtonData("<-", "Назад куда то")
-	current := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%d/%d", 1, 1), "текущее количество")
+	count := database.GetItemsInBucket(db, chatID)
+	current := tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("%d/%d", offset+1, count), "текущее количество")
 	toward := tgbotapi.NewInlineKeyboardButtonData("->", "Вперед куда то")
 	/*size := tgbotapi.NewInlineKeyboardButtonData(item.Size, "default")*/
+	//color.Red()
 	msg.Caption = fmt.Sprintf(" %s\nСтоимость: %d * %d = %d рублей\nЦвет: %s\nРазмер: %s",
 		item.Title, item.Price, item.Quantity, item.Price*item.Quantity, item.Color, item.Size)
 	sizes[chatID] = item.Size
 	keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, []tgbotapi.InlineKeyboardButton{delete, decrease, quantity, increase})
 	keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, []tgbotapi.InlineKeyboardButton{back, current, toward})
 	/*keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, []tgbotapi.InlineKeyboardButton{size})*/
-	return msg, keyboard
+	msg.ReplyMarkup = keyboard
+	return msg
 
 }
 
