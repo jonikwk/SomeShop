@@ -316,18 +316,17 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 		case "Отменить регистрацию":
 			tgbot.CanselRegistration(update, db, chatID)
 		case "Регистрация":
-			switch {
-			case database.IsUserContainPhoneNumber(db, chatID) == false:
-				tgbot.GetTelephoneNumber(update)
-			case database.IsRegistrationCompleted(db, chatID) == false:
-				tgbot.GetAddress(update, db)
-			} //потом разместить случай на уже зарегистрированного пользователя
-
-		/*if database.IsUserContainPhoneNumber(db, chatID) == false {
-			tgbot.GetTelephoneNumber(update)
-		} else if database.IsGettingAddressCompleted(chatID, db) {
-			tgbot.GetAddress(update, db)
-		}*/
+			if database.IsRegistrationCompleted(db, chatID) {
+				msg := tgbotapi.NewMessage(chatID, "Вы уже зарегистрированы")
+				tgbot.Token.Send(msg)
+			} else {
+				switch {
+				case database.IsUserContainPhoneNumber(db, chatID) == false:
+					tgbot.GetTelephoneNumber(update)
+				case database.IsRegistrationCompleted(db, chatID) == false:
+					tgbot.GetAddress(update, db)
+				}
+			}
 		case "Да":
 			database.CompleteRegistration(db, chatID)
 			tgbot.SendMenu(update)
@@ -655,6 +654,11 @@ func (tgbot *TelegramBot) DeleteItem(update tgbotapi.Update, db *sql.DB, chatID 
 	orderID := database.GetUserOrdersID(db, chatID)
 	sizeID := database.GetSizeID(db, size)
 	database.DeleteItemFromOrder(db, productID, orderID, sizeID)
+	offset := database.GetCurrentItem(db, chatID)
+	if offset > 0 {
+		offset--
+	}
+	database.SetCurrentItem(db, offset, chatID)
 	callBack := tgbotapi.NewCallback(update.CallbackQuery.ID, "Товар удален")
 	tgbot.Token.AnswerCallbackQuery(callBack)
 }

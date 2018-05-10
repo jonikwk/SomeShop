@@ -314,12 +314,10 @@ func AddItemToOrder(db *sql.DB, product int, order int, size int) {
 	}
 }
 
-func GetProductID(db *sql.DB, photoID string) int {
+func GetProductID(db *sql.DB, photoID string) (id int) {
 	row := db.QueryRow(`select id from tables.products where photo = $1`, photoID)
-	var id int
 	row.Scan(&id)
-	color.Red("ID BLEAT: ", fmt.Sprintln(id))
-	return id
+	return
 }
 
 func GetSizes(db *sql.DB, id_product int) []string {
