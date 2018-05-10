@@ -7,7 +7,6 @@ import (
 
 	c "../configuration"
 	"../models"
-	"github.com/fatih/color"
 	"github.com/golang/glog"
 	_ "github.com/lib/pq"
 )
@@ -29,6 +28,7 @@ func OpenDB(config *c.Configuration, psqlInfo string) *sql.DB {
 	return db
 }
 
+//AddUser -
 func AddUser(db *sql.DB, id int64) {
 	stmt, err := db.Prepare(`insert into tables.users (id) values ($1)`)
 	if err != nil {
@@ -45,7 +45,6 @@ func IsUserInDatabase(chatID int64, db *sql.DB) bool {
 	row := db.QueryRow(`select id from tables.users where id = $1`, chatID)
 	var id string
 	row.Scan(&id)
-	color.Green(id)
 	if id == "" {
 		return false
 	}
@@ -120,7 +119,6 @@ func GetCurrentItem(db *sql.DB, chatID int64) int {
 }
 
 func SetCurrentItem(db *sql.DB, current int, chatID int64) {
-	color.Red(fmt.Sprintln("Current: ", current))
 	stmt, err := db.Prepare(`update tables.users set current_offset = $1  where id = $2`)
 	if err != nil {
 		glog.Exit()
@@ -160,7 +158,6 @@ func GetCatalogId(db *sql.DB, title string) int { //передаем айди
 	row := db.QueryRow(`select id from tables.catalog where title = $1`, title)
 	var id int
 	row.Scan(&id)
-	color.Red(fmt.Sprintln("ID: ", id))
 	return id
 }
 
@@ -184,13 +181,11 @@ func GetCatalogIDSameSections(db *sql.DB, chatID int64, section string) int {
 		where title = $1 and tables.users.id = $2`, section, chatID)
 	var id int
 	row.Scan(&id)
-	color.Red(fmt.Sprintln("ID: ", id))
+
 	return id
 }
 
 func GetItems(db *sql.DB, id int, offset int) []*models.Description {
-	color.Green(fmt.Sprintln("ID IN GET ITEMS: ", id))
-	color.Green(fmt.Sprintln("OFFSET BLYAD: ", offset))
 	rows, err := db.Query(`select id, title, price, color, description, photo from tables.products
 		 where id_category = $1 limit 5 offset $2`, id, offset)
 	if err != nil {
@@ -200,7 +195,6 @@ func GetItems(db *sql.DB, id int, offset int) []*models.Description {
 	for rows.Next() {
 		item := new(models.Description)
 		rows.Scan(&item.ID, &item.Title, &item.Price, &item.Color, &item.Description, &item.Photo)
-		color.Red(fmt.Sprintln("ITEM: ", item.Title))
 		items = append(items, item)
 	}
 	return items
@@ -217,7 +211,6 @@ func IsUserContainPhoneNumber(db *sql.DB, chatID int64) bool {
 	row := db.QueryRow(`select phone from tables.users where id = $1`, chatID)
 	var phone string
 	row.Scan(&phone)
-	color.Red("PHONE: ", phone)
 	if phone == "none" || phone == "" {
 		return false
 	}
@@ -239,7 +232,6 @@ func IsRegistrationCompleted(db *sql.DB, chatID int64) bool {
 	row := db.QueryRow(`select registration_completed from tables.users where id = $1`, chatID)
 	var registration bool
 	row.Scan(&registration)
-	color.Red(fmt.Sprintln(registration))
 	return registration
 }
 
@@ -318,7 +310,6 @@ func GetProductID(db *sql.DB, photoID string) int {
 	row := db.QueryRow(`select id from tables.products where photo = $1`, photoID)
 	var id int
 	row.Scan(&id)
-	color.Red("ID BLEAT: ", fmt.Sprintln(id))
 	return id
 }
 
@@ -337,9 +328,6 @@ func GetSizes(db *sql.DB, id_product int) []string {
 	return titles
 }
 
-/*select title, price, color, photo, quantity from tables.products inner join tables.order_product on tables.products.id=tables.order_product.id_product inner join tables.orders on tables.order_product.id_order=tables.orders.id where tables.orders.id_user = 294176487;
- */
-
 func GetSizeID(db *sql.DB, size string) int {
 	row := db.QueryRow(`select id from tables.sizes where title = $1`, size)
 	var id int
@@ -356,7 +344,6 @@ func GetOrders(db *sql.DB, chatID int64, offset int) *models.Order {
 
 	item := new(models.Order)
 	rows.Scan(&item.Title, &item.Price, &item.Size, &item.Color, &item.Photo, &item.Quantity)
-	color.Red(fmt.Sprintln("ITEM: ", item.Title))
 	return item
 }
 
@@ -472,29 +459,5 @@ func GetReviews(db *sql.DB, productID int) []*models.Review {
 		rows.Scan(&item.Name, &item.Date, &item.Description)
 		items = append(items, item)
 	}
-	color.Red(fmt.Sprintln("ASDFG: ", items))
 	return items
 }
-
-//select count(id_order) from tables.order_product inner join tables.orders on id_order = tables.orders.id where tables.orders.id_user = 364794408;
-
-//Пересмотреть
-/*func IsGettingAddressTrue(db *sql.DB, chatID int64) bool {
-	row := db.QueryRow(`select getting_address from tables.users where id = $1`, chatID)
-	var gettingAddress string
-	row.Scan(&gettingAddress)
-	if gettingAddress == "" {
-		return false
-	}
-	return true
-}
-
-//Пересмотреть
-func IsGettingAddressCompleted(chatID int64, db *sql.DB) bool {
-	row := db.QueryRow(`select getting_address from tables.users where id = $1`, chatID)
-	var gettingAddress bool
-	row.Scan(&gettingAddress)
-	color.Green(fmt.Sprintln(gettingAddress))
-	return gettingAddress
-}
-*/
