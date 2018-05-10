@@ -316,6 +316,8 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			}
 		case "Да":
 			database.CompleteRegistration(db, chatID)
+			msg := tgbotapi.NewMessage(chatID, "Registration completed")
+			tgbot.Token.Send(msg)
 			tgbot.SendMenu(update)
 		case "Новости":
 			msg := tgbotapi.NewMessage(chatID, "На данный момент новостей нет")

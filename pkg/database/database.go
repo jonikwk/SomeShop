@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/lib/pq"
+
 	c "../configuration"
 	"../models"
 	"github.com/golang/glog"
@@ -184,18 +186,19 @@ func GetCatalogIDSameSections(db *sql.DB, chatID int64, section string) (id int)
 }
 
 //GetItems -
-func GetItems(db *sql.DB, id int, offset int) (items []*models.Description) {
+func GetItems(db *sql.DB, id int, offset int) []*models.Description {
 	rows, err := db.Query(`select id, title, price, color, description, photo from tables.products
 		 where id_category = $1 limit 5 offset $2`, id, offset)
 	if err != nil {
 		glog.Exit(err)
 	}
+	items := make([]*models.Description, 0)
 	for rows.Next() {
 		item := new(models.Description)
 		rows.Scan(&item.ID, &item.Title, &item.Price, &item.Color, &item.Description, &item.Photo)
 		items = append(items, item)
 	}
-	return
+	return items
 }
 
 //GetItemsCount -
@@ -340,14 +343,15 @@ func GetSizeID(db *sql.DB, size string) (id int) {
 }
 
 //GetOrders -
-func GetOrders(db *sql.DB, chatID int64, offset int) (item *models.Order) {
+func GetOrders(db *sql.DB, chatID int64, offset int) *models.Order {
 	rows := db.QueryRow(`select tables.products.title, price, tables.sizes.title, color, photo, quantity from tables.products
 		 inner join tables.order_product on tables.products.id=tables.order_product.id_product 
 		 inner join tables.sizes on tables.order_product.id_size=tables.sizes.id
 		 inner join tables.orders on tables.order_product.id_order=tables.orders.id 
 		 where tables.orders.id_user = $1 order by tables.order_product.id limit 1 offset $2`, chatID, offset)
+	item := new(models.Order)
 	rows.Scan(&item.Title, &item.Price, &item.Size, &item.Color, &item.Photo, &item.Quantity)
-	return
+	return item
 }
 
 //DeleteItemFromOrder -
@@ -449,15 +453,16 @@ func AddTextReview(db *sql.DB, chatID int64, text string) {
 }
 
 //GetReviews -
-func GetReviews(db *sql.DB, productID int) (items []*models.Review) {
+func GetReviews(db *sql.DB, productID int) []*models.Review {
 	rows, err := db.Query(`select name, date, description from tables.reviews where id_product = $1 limit 5`, productID)
 	if err != nil {
 		glog.Exit()
 	}
+	items := make([]*models.Review, 0)
 	for rows.Next() {
 		item := new(models.Review)
 		rows.Scan(&item.Name, &item.Date, &item.Description)
 		items = append(items, item)
 	}
-	return
+	return items
 }
