@@ -26,3 +26,9 @@ type Order struct {
 	Photo    string
 	Quantity int
 }
+
+type Review struct {
+	Name        string
+	Date        string
+	Description string
+}

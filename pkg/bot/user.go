@@ -56,6 +56,7 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			tgbot.Token.AnswerCallbackQuery(callBack)
 			tgbot.AddItemToOrder(update, db, "XXXL")
 		case "Отзывы":
+			tgbot.ShowReviews(update, db, chatID)
 		//	text := update.CallbackQuery.Message.Caption
 		//msg := tgbotapi.NewMessage(chatID, text)
 		//tgbot.Token.Send(msg)
@@ -677,11 +678,35 @@ func (tgbot *TelegramBot) AddReview(update tgbotapi.Update, db *sql.DB, chatID i
 	photo := *update.CallbackQuery.Message.Photo
 	photoID := photo[0].FileID
 	productID := database.GetProductID(db, photoID)
-	database.AddAuthorReview(db, chatID, productID)
+	var name string
+	if update.CallbackQuery.From.UserName != "" {
+		name = update.CallbackQuery.From.UserName
+	} else {
+		name = update.CallbackQuery.From.FirstName + " " + update.CallbackQuery.From.LastName
+	}
+	color.Red(fmt.Sprintln("ERTYBFDFGBFD: ", update.CallbackQuery.From.FirstName))
+	database.AddAuthorReview(db, chatID, productID, name)
 	msg := tgbotapi.NewMessage(chatID, "Your review:")
 	tgbot.Token.Send(msg)
 }
 
 func (tgbot *TelegramBot) AddTextReview(db *sql.DB, chatID int64, text string) {
 	database.AddTextReview(db, chatID, text)
+}
+
+func (tgbot *TelegramBot) ShowReviews(update tgbotapi.Update, db *sql.DB, chatID int64) {
+	photo := *update.CallbackQuery.Message.Photo
+	photoID := photo[0].FileID
+	productID := database.GetProductID(db, photoID)
+	color.Green(fmt.Sprintln("PRODUCT ID: ", productID))
+	items := database.GetReviews(db, productID)
+	if len(items) != 0 {
+		for _, item := range items {
+			msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("%s\n Date: %s\n %s", item.Name, item.Date, item.Description))
+			tgbot.Token.Send(msg)
+		}
+	} else {
+		msg := tgbotapi.NewMessage(chatID, "Threre are no reviews on this item.")
+		tgbot.Token.Send(msg)
+	}
 }

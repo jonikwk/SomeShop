@@ -409,13 +409,13 @@ func GetItemsInBucket(db *sql.DB, chatID int64) int {
 	return count
 }
 
-func AddAuthorReview(db *sql.DB, chatID int64, productID int) {
-	stmt, err := db.Prepare(`insert into tables.reviews (id_product, id_user) values ($1, $2)`)
+func AddAuthorReview(db *sql.DB, chatID int64, productID int, name string) {
+	stmt, err := db.Prepare(`insert into tables.reviews (id_product, id_user, name) values ($1, $2, $3)`)
 	if err != nil {
 		glog.Exit()
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(productID, chatID)
+	_, err = stmt.Exec(productID, chatID, name)
 	if err != nil {
 		glog.Exit()
 	}
@@ -459,6 +459,21 @@ func AddTextReview(db *sql.DB, chatID int64, text string) {
 	if err != nil {
 		glog.Exit()
 	}
+}
+
+func GetReviews(db *sql.DB, productID int) []*models.Review {
+	rows, err := db.Query(`select name, date, description from tables.reviews where id_product = $1 limit 5`, productID)
+	if err != nil {
+		glog.Exit()
+	}
+	items := make([]*models.Review, 0)
+	for rows.Next() {
+		item := new(models.Review)
+		rows.Scan(&item.Name, &item.Date, &item.Description)
+		items = append(items, item)
+	}
+	color.Red(fmt.Sprintln("ASDFG: ", items))
+	return items
 }
 
 //select count(id_order) from tables.order_product inner join tables.orders on id_order = tables.orders.id where tables.orders.id_user = 364794408;
