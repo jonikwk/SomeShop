@@ -58,22 +58,22 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			database.ActivateAddingReview(db, chatID)
 			tgbot.AddReview(update, db, chatID)
 		case "Одежда":
-			id := database.GetCatalogId(db, "Одежда")
+			id := database.GetCatalogID(db, "Одежда")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
 		case "Мужская одежда":
-			id := database.GetCatalogId(db, "Мужская одежда")
+			id := database.GetCatalogID(db, "Мужская одежда")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
 		case "Женская одежда":
-			id := database.GetCatalogId(db, "Женская одежда")
+			id := database.GetCatalogID(db, "Женская одежда")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
 		case "Обувь":
-			id := database.GetCatalogId(db, "Обувь")
+			id := database.GetCatalogID(db, "Обувь")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
 		case "Женская обувь":
-			id := database.GetCatalogId(db, "Женская обувь")
+			id := database.GetCatalogID(db, "Женская обувь")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
 		case "Мужская обувь":
-			id := database.GetCatalogId(db, "Мужская обувь")
+			id := database.GetCatalogID(db, "Мужская обувь")
 			tgbot.ChangeMessage(update, db, messageID, chatID, id)
 		case "Верхняя одежда":
 			id := database.GetCatalogIDSameSections(db, chatID, "Верхняя одежда")
@@ -99,112 +99,112 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 		case "Блузки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Блузки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Рубашки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Рубашки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Брюки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Брюки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Джинсы":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Джинсы")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Футболки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Футболки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Платья":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Платья")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Юбки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Юбки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Жилеты":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Жилеты")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Комбинезоны":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Комбинезоны")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Куртки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Куртки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Майки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Майки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Пальто":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Пальто")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Шубы":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Шубы")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Дубленки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Дубленки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Бомберы":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Бомберы")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Парки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Парки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Плащи":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Плащи")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Джемперы":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Джемперы")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Свитеры":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Свитеры")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Пиджаки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Пиджаки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Жакеты":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Жакеты")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Толстовки":
 			tgbot.DeleteMessage(update)
 			id := database.GetCatalogIDSameSections(db, chatID, "Толстовки")
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.SendItems(update, db, id)
 		case "Каталог вперед":
 			tgbot.DeleteMessage(update)
@@ -216,9 +216,9 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			tgbot.ChangeCurrentSection(update, db, chatID)
 		case "Назад":
 			tgbot.DeleteMessage(update)
-			idCurrent := database.GetCurrentParnetId(db, chatID)
+			idCurrent := database.GetCurrentParnetID(db, chatID)
 			id := database.GetParentID(db, idCurrent)
-			database.SetCurrentParnetId(db, chatID, id)
+			database.SetCurrentParnetID(db, chatID, id)
 			tgbot.ChangeCurrentSection(update, db, chatID)
 		case "Назад куда то":
 			tgbot.DeleteMessage(update)
@@ -264,7 +264,7 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			}
 		case "Ещё":
 			tgbot.DeleteMessage(update)
-			idCurrent := database.GetCurrentParnetId(db, chatID)
+			idCurrent := database.GetCurrentParnetID(db, chatID)
 			tgbot.IncreaseCurrentItem(db, chatID)
 			tgbot.SendItems(update, db, idCurrent)
 		}
@@ -317,6 +317,9 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 		case "Да":
 			database.CompleteRegistration(db, chatID)
 			tgbot.SendMenu(update)
+		case "Новости":
+			msg := tgbotapi.NewMessage(chatID, "На данный момент новостей нет")
+			tgbot.Token.Send(msg)
 		default:
 			condition := database.IsUserContainPhoneNumber(db, chatID) == false && update.Message.Contact != nil
 			switch {

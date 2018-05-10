@@ -14,6 +14,6 @@
 		<botToken>409034602:AAE7Tbs2-7DF6h5h8RJDn47KFzPc9lGs5ic</botToken>
 		<updateOffSet>0</updateOffSet>
     	<updateTimeOut>64</updateTimeOut>
-		<mapsApiKey>AIzaSyCPSKfYtsbLI1VmrfXYimmpZqDmIfZcEpQ</mapsApiKey>
+		<mapsAPIKey>AIzaSyCPSKfYtsbLI1VmrfXYimmpZqDmIfZcEpQ</mapsApiKey>
 	</settings>
 </configuration>

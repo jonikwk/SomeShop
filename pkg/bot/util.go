@@ -2,12 +2,10 @@ package bot
 
 import (
 	"database/sql"
-	"fmt"
 	"math/rand"
 
 	cnf "../configuration"
 	"../database"
-	"github.com/fatih/color"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/golang/glog"
 	"googlemaps.github.io/maps"
@@ -15,6 +13,7 @@ import (
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
+//RandStringBytes -
 func RandStringBytes() string {
 	b := make([]byte, 10)
 	for i := range b {
@@ -23,6 +22,7 @@ func RandStringBytes() string {
 	return string(b)
 }
 
+//DeleteMessage -
 func (tgbot *TelegramBot) DeleteMessage(update tgbotapi.Update) {
 	deleteMessage := tgbotapi.DeleteMessageConfig{
 		ChatID:    update.CallbackQuery.Message.Chat.ID,
@@ -31,39 +31,41 @@ func (tgbot *TelegramBot) DeleteMessage(update tgbotapi.Update) {
 	tgbot.Token.Send(deleteMessage)
 }
 
+//ChangeMessage -
 func (tgbot *TelegramBot) ChangeMessage(update tgbotapi.Update, db *sql.DB, messageID int, chatID int64, id int) {
-	// id записи по имени из tables.catalog
-	database.SetCurrentParnetId(db, chatID, id)  // в талице пользователей меняется id_parent
-	markup := tgbot.SendSections(update, db, id) //тправка скций по
+	database.SetCurrentParnetID(db, chatID, id)
+	markup := tgbot.SendSections(update, db, id)
 	edit := tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, markup)
 	tgbot.Token.Send(edit)
 }
 
+//ChangeCurrentSection -
 func (tgbot *TelegramBot) ChangeCurrentSection(update tgbotapi.Update, db *sql.DB, chatID int64) {
-	idCurrent := database.GetCurrentParnetId(db, chatID)
-	color.Yellow(fmt.Sprintln("ID CURRENT ЧТО ТОЛЬКО ЧТО СТАВИЛ: ", idCurrent))
+	idCurrent := database.GetCurrentParnetID(db, chatID)
 	msg := tgbotapi.NewMessage(chatID, "Выберите раздел:")
 	msg.ReplyMarkup = tgbot.SendSections(update, db, idCurrent)
 	tgbot.Token.Send(msg)
 }
 
+//IncreaseCurrentItem -
 func (tgbot *TelegramBot) IncreaseCurrentItem(db *sql.DB, chatID int64) {
 	current := database.GetCurrentItem(db, chatID)
 	current += 5
 	database.SetCurrentItem(db, current, chatID)
 }
 
+//DecreaseCurrentItem -
 func (tgbot *TelegramBot) DecreaseCurrentItem(db *sql.DB, chatID int64) {
 	current := database.GetCurrentItem(db, chatID)
 	current -= 5
 	database.SetCurrentItem(db, current, chatID)
 }
 
+//GetMapsClient -
 func GetMapsClient(config *cnf.Configuration) *maps.Client {
-	c, err := maps.NewClient(maps.WithAPIKey("AIzaSyCPSKfYtsbLI1VmrfXYimmpZqDmIfZcEpQ" /*config.Settings.MapsApiKey*/))
+	c, err := maps.NewClient(maps.WithAPIKey(config.Settings.MapsAPIKey))
 	if err != nil {
 		glog.Exit()
 	}
-	color.Red("HREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE!!!")
 	return c
 }
