@@ -245,9 +245,12 @@ func (tgbot *TelegramBot) AnalyzeUpdate(update tgbotapi.Update, db *sql.DB, conf
 			msg := tgbot.GetOrders(update, db, chatID, offset)
 			tgbot.Token.Send(msg)
 		case "Уменьшить":
-			tgbot.DecreaseItem(update, db, chatID)
-			tgbot.DeleteMessage(update)
 			offset := database.GetCurrentItem(db, chatID)
+			item := database.GetOrders(db, chatID, offset)
+			if item.Quantity > 1 {
+				tgbot.DecreaseItem(update, db, chatID)
+			}
+			tgbot.DeleteMessage(update)
 			msg := tgbot.GetOrders(update, db, chatID, offset)
 			tgbot.Token.Send(msg)
 		case "Удалить":

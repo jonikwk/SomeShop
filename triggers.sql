@@ -24,8 +24,6 @@ language plpgsql;
 create trigger check_items_quantity before insert on tables.order_product for each row execute procedure tables.check_items_quantity(); 
 
 
-drop trigger check_negative_quantity on tables.order_product cascade;
-drop function tables.check_negative_quantity(); 
 
 /*create or replace function tables.check_negative_quantity() 
 returns trigger as $$
